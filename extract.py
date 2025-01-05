@@ -5,7 +5,7 @@ from umlsparser import UMLSParser
 umls = UMLSParser('../umls-extract')
 
 procedures_path = "../医疗记录系统采集的各类信息/PROCEDURES_ICD.csv"
-prescriptions_path = "../医疗记录系统采集的各类信息/PRESCRIPTIONS.csv"
+drug_path = "../字典信息/D_MED.pkl"
 diagnoses_path = "../医疗记录系统采集的各类信息/DIAGNOSES_ICD.csv"
 
 # 处理code映射
@@ -50,13 +50,9 @@ procedure_codes = procedures_data['ICD9_CODE'].astype(str).tolist()
 print("Processing Procedures...")
 process_codes(procedure_codes, "ICD9CM", umls)
 
-# 处理处方用药
-#prescriptions_data = pd.read_csv(prescriptions_path)
-#ndc_codes = prescriptions_data['NDC'].astype(str).tolist()
-#gsn_codes = prescriptions_data['GSN'].astype(str).tolist()
-
-#print("Processing Prescriptions (NDC)...")
-#process_codes(ndc_codes, "RXNORM", umls)
-
-#print("Processing Prescriptions (GSN)...")
-#process_codes(gsn_codes, "MMSL", umls)
+# 处理药物
+drug_data = pd.read_pickle(drug_path)
+# 提取 ATC3 代码且去重
+atc3_codes = drug_data['ATC3'].astype(str).drop_duplicates().tolist()
+print("Processing Drugs(ATC3)...")
+process_codes(atc3_codes, "ATC", umls)
