@@ -98,16 +98,19 @@ for cui, concept in umls.get_concepts().items():
         print(cui, name, tui, name_of_semantic_type)
 ```
 
-#### 提取mimic数据集code，并对应umls的cui，提取实体及关系
+#### 提取mimic数据集code，并对应umls的cui，提取其概念及关系
 ```bash
-#首先需要umls数据集和mimic-iii/iv数据集
+#首先需要替换umls数据集路径和mimic-iii/iv数据集路径
 # umls数据集路径
 umls = UMLSParser('../umls-extract')
 
-# mimic-iii
+# mimic-iii/iv数据集路径
 procedures_path = "../医疗记录系统采集的各类信息/PROCEDURES_ICD.csv"
 prescriptions_path = "../医疗记录系统采集的各类信息/TMP_PRESCRIPTIONS.csv"
 diagnoses_path = "../医疗记录系统采集的各类信息/DIAGNOSES_ICD.csv"
+
+# 其中关系以三元组体现，rel可能是不具体的。
+# 比如AQ，RQ，PAR，CHD，这是因为umls中没有给出这两个概念的具体关系。
 python extract.py
 ```
 
