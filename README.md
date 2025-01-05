@@ -38,6 +38,15 @@ mv 2022AB/NET/SRSTRE1 umls-extract/NET/
 rm -rf 2022AB-full/
 ```
 
+umls数据集处理后目录应该是
+```bash
+umls-extract
+  META
+    MRCONSO.RRF
+    MRREL.RRF
+  NET
+```
+
 ## Usage
 
 *TODO WRITE ME*
@@ -48,6 +57,7 @@ rm -rf 2022AB-full/
 ```python
 from umlsparser import UMLSParser
 
+# umls数据文件路径，例如
 umls = UMLSParser('/home/toberhauser/DEV/Data/UMLS/2017AA-full/2017AA')
 
 for cui, concept in umls.get_concepts().items():
@@ -86,6 +96,24 @@ for cui, concept in umls.get_concepts().items():
     name_of_semantic_type = umls.get_semantic_types()[concept.get_tui()].get_name()
     for name in concept.get_names_for_language('ENG'):
         print(cui, name, tui, name_of_semantic_type)
+```
+
+#### 提取mimic数据集code，并对应umls的cui，提取实体及关系
+```bash
+#首先需要umls数据集和mimic-iii/iv数据集
+# umls数据集路径
+umls = UMLSParser('../umls-extract')
+
+# mimic-iii
+procedures_path = "../医疗记录系统采集的各类信息/PROCEDURES_ICD.csv"
+prescriptions_path = "../医疗记录系统采集的各类信息/TMP_PRESCRIPTIONS.csv"
+diagnoses_path = "../医疗记录系统采集的各类信息/DIAGNOSES_ICD.csv"
+python extract.py
+```
+
+#### 获取umls词汇来源汇总及数量，例如ICD9CM
+```bash
+python source.py
 ```
 
 ## Versioning

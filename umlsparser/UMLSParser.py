@@ -47,14 +47,17 @@ class UMLSParser:
             'MRDEF': os.path.join(path, 'META', 'MRDEF.RRF'),
             'MRSTY': os.path.join(path, 'META', 'MRSTY.RRF'),
             'SRDEF': os.path.join(path, 'NET', 'SRDEF'),
+            'MRREL': os.path.join(path, 'META', 'MRREL.RRF'),
         }
         self.language_filter = language_filter
         self.concepts = {}
+        self.relationships = {}
         self.semantic_types = {}
         self.__parse_mrconso__()
         self.__parse_mrdef__()
         self.__parse_mrsty__()
         self.__parse_srdef__()
+        self.__parse_mrrel__()
 
     def __get_or_add_concept__(self, cui: str) -> Concept:
         concept = self.concepts.get(cui, Concept(cui))
@@ -65,6 +68,38 @@ class UMLSParser:
         semantic_type = self.semantic_types.get(tui, SemanticType(tui))
         self.semantic_types[tui] = semantic_type
         return semantic_type
+
+    def __get_or_add_relationships__(self, cui: str) -> Concept:
+        concept = self.concepts.get(cui, Concept(cui))
+        self.concepts[cui] = concept
+        return concept
+
+    def __parse_mrrel__(self):
+        """
+        解析 MRREL.RRF 文件以提取概念之间的关系。
+        """
+        processed_relationships = set()
+        for line in tqdm(open(self.paths['MRREL']), desc='Parsing UMLS relationships (MRREL.RRF)'):
+            line = line.split('|')
+            data = {
+                'CUI1' : line[0],
+                'CUI2' : line[4],
+                'REL' : line[3],
+                'RELA' : line[7]
+            }
+
+            # 使用一个元组来唯一标识关系
+            unique_key = (data['CUI1'], data['CUI2'], data['REL'], data['RELA'])
+            if unique_key not in processed_relationships:
+                processed_relationships.add(unique_key)  # 添加到集合中
+
+                # 添加关系到字典中
+                cui1 = data['CUI1']
+                if cui1 not in self.relationships:
+                    self.relationships[cui1] = []
+                self.relationships[cui1].append(data)
+
+        logger.info('Parsed relationships for {} unique CUIs'.format(len(self.relationships.keys())))
 
     def __parse_mrconso__(self):
         for line in tqdm(open(self.paths['MRCONSO']), desc='Parsing UMLS concepts (MRCONSO.RRF)'):
@@ -162,6 +197,26 @@ class UMLSParser:
         :return: A dictionary of all detected UMLS semantic types with TUI being the key.
         """
         return self.semantic_types
+
+    def get_concept_triples(self, cui: str):
+        """
+                获取给定 CUI 的所有关系三元组（CUI1, CUI2, REL/REL2）。
+
+                :param cui: 概念的 CUI 标识符。
+                :return: 一个关系三元组列表，包含 CUI1, CUI2, 和 REL/REL2。
+                """
+        if not hasattr(self, 'relationships'):
+            logger.error("Relationships data not loaded. Ensure __parse_mrrel__ is called during initialization.")
+            return []
+
+        relationships = self.relationships.get(cui, [])
+        triples = []
+
+        for rel in relationships:
+            rel_type = rel.get('RELA') if rel.get('RELA') else rel.get('REL')
+            triples.append((cui, rel_type, rel['CUI2']))
+
+        return triples
 
     def get_languages(self):
         return self.language_filter
